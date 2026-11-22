@@ -112,8 +112,36 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":11664876,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":13802484,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
 const GODOT_THREADS_ENABLED = false;
+window.editAshPlayerName = function (currentName, maxLength, onConfirm) {
+	const dialog = document.createElement('dialog');
+	dialog.style.cssText = 'background:#211a13;color:#efe6d2;border:1px solid #d4a85a;border-radius:12px;box-sizing:border-box;width:min(24rem,90vw);padding:20px;font:16px system-ui';
+	dialog.innerHTML = `
+		<form method="dialog" style="display:grid;gap:14px">
+			<label for="ash-player-name" style="font-weight:bold">캐릭터 이름</label>
+			<input id="ash-player-name" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus required style="background:#30261d;color:inherit;border:1px solid #a89a82;border-radius:8px;padding:10px;font:inherit;width:100%;box-sizing:border-box">
+			<div style="display:flex;justify-content:flex-end;gap:8px">
+				<button type="button" style="background:#30261d;color:inherit;border:1px solid #a89a82;border-radius:6px;padding:8px 14px;font:inherit">취소</button>
+				<button value="save" style="background:#d4a85a;color:#211a13;border:0;border-radius:6px;padding:8px 14px;font:inherit">확인</button>
+			</div>
+		</form>`;
+	dialog.setAttribute('aria-label', '캐릭터 이름');
+	const input = dialog.querySelector('input');
+	input.maxLength = maxLength;
+	input.value = currentName;
+	dialog.querySelector('button[type="button"]').addEventListener('click', () => dialog.close());
+	dialog.addEventListener('close', function () {
+		dialog.remove();
+		if (dialog.returnValue === 'save') {
+			onConfirm(input.value);
+		}
+		document.querySelector('canvas').focus();
+	}, {once: true});
+	document.body.append(dialog);
+	dialog.showModal();
+	input.select();
+};
 if (!window.isSecureContext) {
 	GODOT_CONFIG.args.push('--audio-driver', 'ScriptProcessor');
 	Object.defineProperty(BaseAudioContext.prototype, 'audioWorklet', {get() { return { addModule: () => Promise.resolve() }; }});
