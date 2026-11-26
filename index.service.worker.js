@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1795350541|2020561';
+const CACHE_VERSION = '1795696384|2957677';
 /** @type {string} */
 const CACHE_PREFIX = '재의 미궁-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
@@ -14,7 +14,7 @@ const OFFLINE_URL = 'index.offline.html';
 const ENSURE_CROSSORIGIN_ISOLATION_HEADERS = false;
 // Files that will be cached on load.
 /** @type {string[]} */
-const CACHED_FILES = ["index.html","index.js","index.offline.html","index.icon.png","index.apple-touch-icon.png","index.audio.worklet.js","index.audio.position.worklet.js"];
+const CACHED_FILES = ["index.html","index.png","index.js","index.offline.html","index.icon.png","index.apple-touch-icon.png","index.audio.worklet.js","index.audio.position.worklet.js"];
 // Files that we might not want the user to preload, and will only be cached on first load.
 /** @type {string[]} */
 const CACHEABLE_FILES = ["index.wasm","index.pck"];
@@ -167,3 +167,12 @@ self.addEventListener('message', (event) => {
 	});
 });
 
+
+self.addEventListener('message', (event) => {
+	if (event.data !== 'ash-cache-game') {
+		return;
+	}
+	event.waitUntil(caches.open(CACHE_NAME).then((cache) => Promise.all(CACHEABLE_FILES.map(
+		(name) => cache.match(name).then((hit) => (hit ? null : cache.add(name)))
+	))).catch(() => {}));
+});
