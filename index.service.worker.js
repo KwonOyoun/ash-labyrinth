@@ -4,9 +4,9 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1795702911|3033111';
+const CACHE_VERSION = '1795853418|3191340';
 /** @type {string} */
-const CACHE_PREFIX = '재의 미궁-sw-cache-';
+const CACHE_PREFIX = '재의 미궁 v2-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 /** @type {string} */
 const OFFLINE_URL = 'index.offline.html';
@@ -21,7 +21,7 @@ const CACHEABLE_FILES = ["index.wasm","index.pck"];
 const FULL_CACHE = CACHED_FILES.concat(CACHEABLE_FILES);
 
 self.addEventListener('install', (event) => {
-	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_FILES)));
+	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_FILES.map((f) => new Request(f, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
 		}
 	).then(function () {
 		// Enable navigation preload if available.
-		return ('navigationPreload' in self.registration) ? self.registration.navigationPreload.enable() : Promise.resolve();
+		return (('navigationPreload' in self.registration) ? self.registration.navigationPreload.disable() : Promise.resolve()).then(() => self.clients.claim());
 	}));
 });
 
@@ -69,10 +69,10 @@ function ensureCrossOriginIsolationHeaders(response) {
 async function fetchAndCache(event, cache, isCacheable) {
 	// Use the preloaded response, if it's there
 	/** @type { Response } */
-	let response = await event.preloadResponse;
+	let response = null;   // 미리 받기(navigation preload)는 HTTP 캐시의 옛 index.html을 줄 수 있어 쓰지 않는다
 	if (response == null) {
 		// Or, go over network.
-		response = await self.fetch(event.request);
+		response = await self.fetch(event.request, { cache: 'no-cache' });
 	}
 
 	if (ENSURE_CROSSORIGIN_ISOLATION_HEADERS) {
@@ -173,6 +173,6 @@ self.addEventListener('message', (event) => {
 		return;
 	}
 	event.waitUntil(caches.open(CACHE_NAME).then((cache) => Promise.all(CACHEABLE_FILES.map(
-		(name) => cache.match(name).then((hit) => (hit ? null : cache.add(name)))
+		(name) => cache.match(name).then((hit) => (hit ? null : cache.add(new Request(name, { cache: 'no-cache' }))))
 	))).catch(() => {}));
 });

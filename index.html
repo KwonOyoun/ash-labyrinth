@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>재의 미궁</title>
+		<title>재의 미궁 v2 시험판</title>
 		<style>
 html, body, #canvas {
 	margin: 0;
@@ -98,7 +98,7 @@ body {
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 <link rel="manifest" href="index.manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="재의 미궁"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#14110d">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="재의 미궁 v2"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#14110d">
 	</head>
 	<body>
 		<canvas id="canvas">
@@ -117,8 +117,10 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":6277596,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17794840,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
 const GODOT_THREADS_ENABLED = false;
+window.ASH_BUILD = '11월 28일 17:10 · d96900';
+window.ASH_BUILD_ID = 'd96900';
 window.editAshPlayerName = function (currentName, maxLength, onConfirm) {
 	const dialog = document.createElement('dialog');
 	dialog.style.cssText = 'background:#211a13;color:#efe6d2;border:1px solid #d4a85a;border-radius:12px;box-sizing:border-box;width:min(24rem,90vw);padding:20px;font:16px system-ui';
@@ -155,6 +157,32 @@ if (!window.isSecureContext) {
 		node.port = { postMessage() {}, close() {}, onmessage: null };
 		return node;
 	};
+}
+if ('serviceWorker' in navigator) {
+	const ashHadController = !!navigator.serviceWorker.controller;
+	navigator.serviceWorker.addEventListener('controllerchange', () => {
+		if (!ashHadController) {
+			return;   // 첫 방문: 처음 맡는 것뿐이라 다시 불러올 필요가 없다
+		}
+		if (!window.ashGameStarted) {
+			if (!sessionStorage.getItem('ash-sw-reloaded')) {
+				sessionStorage.setItem('ash-sw-reloaded', '1');
+				window.location.reload();
+			}
+			return;
+		}
+		// 게임 중에는 다시 불러오지 않는다(진행을 끊지 않게). 다음에 열 때 새 판이 열린다.
+		const note = document.createElement('div');
+		note.textContent = '새 버전이 준비되었습니다. 게임을 다시 열면 바뀝니다.';
+		note.setAttribute('role', 'status');
+		note.style.cssText = 'position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);background:#211a13;color:#efe6d2;border:1px solid #d4a85a;border-radius:10px;padding:10px 14px;font:15px system-ui;z-index:10;max-width:90vw';
+		document.body.append(note);
+		setTimeout(() => note.remove(), 8000);
+	});
+	window.addEventListener('load', () => {
+		sessionStorage.removeItem('ash-sw-reloaded');
+		navigator.serviceWorker.getRegistration().then((r) => r && r.update()).catch(() => {});
+	});
 }
 const engine = new Engine(GODOT_CONFIG);
 
@@ -255,6 +283,7 @@ const engine = new Engine(GODOT_CONFIG);
 			},
 		}).then(() => {
 			setStatusMode('hidden');
+			window.ashGameStarted = true;
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.ready.then((r) => r.active && r.active.postMessage('ash-cache-game')).catch(() => {});
 			}
